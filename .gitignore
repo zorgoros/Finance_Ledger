@@ -1,0 +1,16 @@
+node_modules/
+test-results/
+playwright-report/
+.agents/
+.DS_Store
+skills-lock.json
+local-data/
+backups/
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+*.sqlite3-shm
+*.sqlite3-wal
+money-ledger-backup-*.json

@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Money Ledger</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600;700&family=Lexend:wght@500;600;700;800&family=Source+Sans+3:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="top-bar">
+        <div class="brand-block">
+          <p class="eyebrow">Local ledger</p>
+          <h1 id="page-title">Money Ledger</h1>
+        </div>
+
+        <div class="top-actions" aria-label="Data actions">
+          <button class="quiet-btn" type="button" id="exportButton">Export</button>
+          <button class="quiet-btn" type="button" id="importButton">Import</button>
+          <button class="danger-btn" type="button" id="clearAllButton">Delete all</button>
+          <input id="importFile" type="file" accept="application/json,.json" hidden />
+        </div>
+      </header>
+
+      <section class="summary-grid" id="ledger" aria-label="Current totals">
+        <article class="summary-card is-positive">
+          <span>They owe you</span>
+          <div class="amount-line">
+            <strong id="totalOwedToMeToman">0 T</strong>
+            <b id="totalOwedToMeUsd">$0.00</b>
+          </div>
+        </article>
+
+        <article class="summary-card is-negative">
+          <span>You owe / overpaid</span>
+          <div class="amount-line">
+            <strong id="totalIOweToman">0 T</strong>
+            <b id="totalIOweUsd">$0.00</b>
+          </div>
+        </article>
+
+        <article class="summary-card is-neutral">
+          <span>Net balance</span>
+          <div class="amount-line">
+            <strong id="netBalanceToman">0 T</strong>
+            <b id="netBalanceUsd">$0.00</b>
+          </div>
+        </article>
+      </section>
+
+      <section class="workspace">
+        <aside class="desk-rail">
+          <form class="panel entry-panel" id="transactionForm">
+            <div class="panel-title-row">
+              <div>
+                <p class="eyebrow">Entry</p>
+                <h2>Add record</h2>
+              </div>
+              <button class="text-btn" type="button" id="resetButton">Clear</button>
+            </div>
+
+            <input type="hidden" id="transactionId" />
+            <datalist id="personSuggestions"></datalist>
+
+            <label class="field field-wide">
+              <span>Name</span>
+              <input id="name" name="name" type="text" list="personSuggestions" placeholder="Pick or type a person" dir="auto" required />
+            </label>
+
+            <div class="field-grid">
+              <label class="field">
+                <span>Amount</span>
+                <input id="amount" name="amount" type="number" inputmode="decimal" min="0.01" step="0.01" placeholder="250" required />
+              </label>
+
+              <label class="field">
+                <span>Currency</span>
+                <select id="transactionCurrency" name="currency" required>
+                  <option value="USD">Dollar ($)</option>
+                  <option value="TOMAN">Toman (T)</option>
+                </select>
+              </label>
+            </div>
+
+            <fieldset class="direction-switch">
+              <legend>Direction</legend>
+              <label>
+                <input type="radio" name="direction" value="theyOwe" checked />
+                <span>I gave</span>
+              </label>
+              <label>
+                <input type="radio" name="direction" value="iOwe" />
+                <span>I received</span>
+              </label>
+            </fieldset>
+
+            <div class="field-grid">
+              <label class="field">
+                <span>International date</span>
+                <input id="date" name="date" type="date" />
+              </label>
+
+              <label class="field">
+                <span>Iranian date</span>
+                <input id="iranianDate" name="iranianDate" type="text" placeholder="۲۵ خرداد ۱۴۰۵" dir="auto" />
+              </label>
+            </div>
+
+            <label class="field field-wide">
+              <span>Note</span>
+              <textarea id="note" name="note" rows="2" placeholder="Reason or detail" dir="auto"></textarea>
+            </label>
+
+            <button class="primary-btn" type="submit" id="saveButton">Save record</button>
+          </form>
+
+          <section class="panel person-workspace" id="selectedPersonPanel" aria-labelledby="selectedPersonTitle">
+            <div class="panel-title-row">
+              <div>
+                <p class="eyebrow">Selected person</p>
+                <h2 id="selectedPersonTitle">Choose a person</h2>
+              </div>
+              <button class="text-btn" type="button" id="clearPersonButton">Clear</button>
+            </div>
+
+            <p class="workspace-hint" id="selectedPersonHint">Click a person from the list to work without typing their name again.</p>
+
+            <div class="person-ledger" aria-label="Selected person balance">
+              <span id="selectedPersonStatus">No person selected</span>
+              <strong id="selectedPersonBalanceToman">0 T</strong>
+              <strong id="selectedPersonBalanceUsd">$0.00</strong>
+              <small id="selectedPersonCount">0 records</small>
+            </div>
+
+            <div class="quick-grid" aria-label="Quick transaction controls">
+              <label class="field">
+                <span>Quick amount</span>
+                <input id="quickAmount" type="number" inputmode="decimal" min="0.01" step="0.01" placeholder="Amount" disabled />
+              </label>
+
+              <label class="field">
+                <span>Currency</span>
+                <select id="quickCurrency" disabled>
+                  <option value="USD">Dollar ($)</option>
+                  <option value="TOMAN">Toman (T)</option>
+                </select>
+              </label>
+            </div>
+
+            <label class="field field-wide">
+              <span>Quick note</span>
+              <input id="quickNote" type="text" placeholder="Optional note" dir="auto" disabled />
+            </label>
+
+            <div class="quick-actions">
+              <button class="positive-btn" type="button" id="quickDebtButton" disabled>Add debt</button>
+              <button class="negative-btn" type="button" id="quickRepaymentButton" disabled>Record repayment</button>
+            </div>
+
+            <div class="settle-actions">
+              <button class="quiet-btn" type="button" id="settleTomanButton" disabled>Settle Toman</button>
+              <button class="quiet-btn" type="button" id="settleUsdButton" disabled>Settle Dollar</button>
+            </div>
+          </section>
+
+          <section class="panel rate-panel" aria-labelledby="rate-title">
+            <div class="panel-title-row compact">
+              <div>
+                <p class="eyebrow">Rate</p>
+                <h2 id="rate-title">Converter</h2>
+              </div>
+              <span class="rate-pill">1 USD = <b id="ratePreview">0 T</b></span>
+            </div>
+
+            <div class="rate-line">
+              <label class="field">
+                <span>Rate</span>
+                <input id="usdToTomanRate" type="number" inputmode="decimal" min="1" step="1" placeholder="60000" />
+              </label>
+              <label class="field">
+                <span>Convert</span>
+                <input id="convertAmount" type="number" inputmode="decimal" min="0" step="0.01" placeholder="100" />
+              </label>
+              <label class="field compact-select">
+                <span>From</span>
+                <select id="convertFrom">
+                  <option value="USD">USD</option>
+                  <option value="TOMAN">Toman</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="conversion-result">
+              <span>Result</span>
+              <strong id="conversionResult">Set a rate first</strong>
+            </div>
+          </section>
+        </aside>
+
+        <section class="ledger-main">
+          <section class="panel people-panel" aria-labelledby="people-title">
+            <div class="panel-title-row">
+              <div>
+                <p class="eyebrow">People</p>
+                <h2 id="people-title">Balances</h2>
+              </div>
+              <span id="peopleCount" class="count-pill">0 people</span>
+            </div>
+
+            <div class="filter-row">
+              <input id="search" type="search" placeholder="Search people or notes" aria-label="Search records" dir="auto" />
+              <select id="statusFilter" aria-label="Filter by status">
+                <option value="all">All balances</option>
+                <option value="theyOwe">They owe me</option>
+                <option value="iOwe">I owe / overpaid</option>
+                <option value="mixed">Mixed</option>
+                <option value="settled">Settled</option>
+              </select>
+            </div>
+
+            <p class="filter-note">Click a name to open that person, then add debt, record a partial repayment, or settle fully.</p>
+            <div id="peopleList" class="people-list"></div>
+          </section>
+
+          <section class="panel table-panel" aria-labelledby="activity-title">
+            <div class="panel-title-row">
+              <div>
+                <p class="eyebrow">Timeline</p>
+                <h2 id="activity-title">All records</h2>
+              </div>
+            </div>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Direction</th>
+                    <th>Amount</th>
+                    <th>International date</th>
+                    <th>Iranian date</th>
+                    <th>Note</th>
+                    <th>Manage</th>
+                  </tr>
+                </thead>
+                <tbody id="recordsTable"></tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+      </section>
+    </main>
+
+    <template id="emptyStateTemplate">
+      <div class="empty-state">
+        <strong>No records yet</strong>
+        <p>Add a person and record the first money movement.</p>
+      </div>
+    </template>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
