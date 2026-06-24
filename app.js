@@ -30,6 +30,9 @@ const ratePreview = document.querySelector("#ratePreview");
 const convertAmountInput = document.querySelector("#convertAmount");
 const convertFromInput = document.querySelector("#convertFrom");
 const conversionResult = document.querySelector("#conversionResult");
+const languageSelect = document.querySelector("#languageSelect");
+const themeToggle = document.querySelector("#themeToggle");
+const themeToggleLabel = document.querySelector("#themeToggleLabel");
 const exportButton = document.querySelector("#exportButton");
 const importButton = document.querySelector("#importButton");
 const importFileInput = document.querySelector("#importFile");
@@ -55,17 +58,328 @@ let db;
 let transactions = [];
 let selectedPersonName = "";
 let toastTimer;
+let currentLanguage = "en";
+let currentTheme = "light";
 
 const SEED_KEY = "money-ledger-farsi-notes-2026-06-19-v1";
 const RATE_KEY = "money-ledger-usd-toman-rate";
+const LANGUAGE_KEY = "money-ledger-language";
+const THEME_KEY = "money-ledger-theme";
 const BACKUP_APP_NAME = "money-ledger";
+
+const translations = {
+  en: {
+    addDebt: "Add debt",
+    addRecord: "Add record",
+    allBalances: "All balances",
+    allRecords: "All records",
+    amount: "Amount",
+    amountGreaterThanZero: "Enter an amount greater than 0",
+    amountPlaceholder: "Amount",
+    appTitle: "Money Ledger",
+    backupRateInvalid: "Backup rate must be at least 1 Toman.",
+    balances: "Balances",
+    choosePerson: "Choose a person",
+    choosePersonHint: "Click a person from the list to work without typing their name again.",
+    clear: "Clear",
+    convert: "Convert",
+    converter: "Converter",
+    couldNotDeleteRecord: "Could not delete record",
+    couldNotDeleteRecords: "Could not delete records",
+    couldNotExportBackup: "Could not export backup",
+    couldNotImportBackup: "Could not import backup",
+    couldNotSaveQuickRecord: "Could not save quick record",
+    couldNotSaveRecord: "Could not save record",
+    couldNotSettleBalance: "Could not settle balance",
+    currency: "Currency",
+    darkTheme: "Dark",
+    debtAdded: "Debt added",
+    delete: "Delete",
+    deleteAll: "Delete all",
+    deleteAllConfirm: "Delete every saved record? This cannot be undone.",
+    deleteRecordConfirm: "Delete the record for {name}? This cannot be undone.",
+    direction: "Direction",
+    dollarBalanceSettled: "Dollar balance settled",
+    edit: "Edit",
+    emptyHint: "Add a person and record the first money movement.",
+    enterAmount: "Enter an amount",
+    enterName: "Enter a name",
+    entry: "Entry",
+    export: "Export",
+    exportedRecords: "Exported {count} {label}",
+    from: "From",
+    fullSettlementNote: "Full {currency} settlement",
+    iGave: "I gave",
+    iOweOverpaid: "I owe / overpaid",
+    iReceived: "I received",
+    import: "Import",
+    importedRecords: "Imported {count} {label}",
+    importConfirm: "Import {count} {label} and replace every current record? This cannot be undone.",
+    importFormat: "Import file format",
+    importFormatHint: "Import accepts a JSON backup and replaces every current record after confirmation. Files exported from this dashboard already match this format.",
+    internationalDate: "International date",
+    invalidBackupJson: "Choose a valid JSON backup file.",
+    invalidRecordAmount: "{label} has an invalid amount for {currency}.",
+    invalidRecordCurrency: "{label} has an unsupported currency.",
+    invalidRecordDirection: "{label} has an unsupported direction.",
+    invalidTransaction: "{label} is not a valid transaction.",
+    iranianDate: "Iranian date",
+    language: "Language",
+    lightTheme: "Light",
+    localLedger: "Local ledger",
+    manage: "Manage",
+    manyPeople: "{count} people",
+    manyRecords: "{count} records",
+    missingName: "{label} is missing a name.",
+    mixed: "Mixed",
+    mixedBalance: "Mixed balance",
+    name: "Name",
+    namePlaceholder: "Pick or type a person",
+    netBalance: "Net balance",
+    noPersonSelected: "No person selected",
+    noRecordsYet: "No records yet",
+    notSet: "not set",
+    note: "Note",
+    notePlaceholder: "Reason or detail",
+    onePerson: "1 person",
+    oneRecord: "1 record",
+    optionalNote: "Optional note",
+    people: "People",
+    peopleHint: "Click a name to open that person, then add debt, record a partial repayment, or settle fully.",
+    personMeta: "{records} - last {date}",
+    quickAmount: "Quick amount",
+    quickDebtNote: "Quick debt",
+    quickNote: "Quick note",
+    quickRepaymentNote: "Quick repayment",
+    rate: "Rate",
+    recordDeleted: "Record deleted",
+    recordRepayment: "Record repayment",
+    recordSaved: "Record saved",
+    recordsCleared: "All records deleted",
+    recordUpdated: "Record updated",
+    repeatedId: "{label} repeats another transaction id.",
+    repaymentRecorded: "Repayment recorded",
+    result: "Result",
+    saveRecord: "Save record",
+    saving: "Saving...",
+    searchPlaceholder: "Search people or notes",
+    selectedPerson: "Selected person",
+    selectedPersonActiveHint: "Use quick actions here for partial repayment, new debt, or full settlement.",
+    settleAmount: "Settle {amount}",
+    settleDollar: "Settle Dollar",
+    settleToman: "Settle Toman",
+    settleConfirm: "Settle {amount} for {name}?",
+    setRateFirst: "Set a rate first",
+    settled: "Settled",
+    storageFailed: "Storage failed",
+    storageFailedMessage: "The browser could not open local storage for this ledger.",
+    switchToDark: "Switch to dark theme",
+    switchToLight: "Switch to light theme",
+    theyOweMe: "They owe me",
+    theyOweYou: "They owe you",
+    timeline: "Timeline",
+    tomanAmountWhole: "Toman amounts must be whole numbers",
+    tomanOption: "Toman (T)",
+    tomanShort: "Toman",
+    tomanUnit: "T",
+    tomanWholeQuick: "Enter a whole Toman amount",
+    tomanBalanceSettled: "Toman balance settled",
+    unsupportedBackup: "Backup file must include a transactions array.",
+    updateRecord: "Update record",
+    updating: "Updating...",
+    usdOption: "Dollar ($)",
+    youOweOverpaid: "You owe / overpaid",
+    youOweThem: "You owe them",
+    zeroPeople: "0 people",
+    zeroRecords: "0 records",
+  },
+  fa: {
+    addDebt: "افزایش بدهی",
+    addRecord: "ثبت رکورد",
+    allBalances: "همه مانده‌ها",
+    allRecords: "همه رکوردها",
+    amount: "مبلغ",
+    amountGreaterThanZero: "مبلغی بیشتر از صفر وارد کنید",
+    amountPlaceholder: "مبلغ",
+    appTitle: "دفتر حساب",
+    backupRateInvalid: "نرخ فایل باید حداقل ۱ تومان باشد.",
+    balances: "مانده‌ها",
+    choosePerson: "یک شخص را انتخاب کنید",
+    choosePersonHint: "روی نام یک شخص بزنید تا بدون تایپ دوباره نام، حساب او را ویرایش کنید.",
+    clear: "پاک کردن",
+    convert: "تبدیل",
+    converter: "مبدل",
+    couldNotDeleteRecord: "حذف رکورد انجام نشد",
+    couldNotDeleteRecords: "حذف رکوردها انجام نشد",
+    couldNotExportBackup: "خروجی گرفتن انجام نشد",
+    couldNotImportBackup: "ورود داده انجام نشد",
+    couldNotSaveQuickRecord: "ثبت سریع انجام نشد",
+    couldNotSaveRecord: "ذخیره رکورد انجام نشد",
+    couldNotSettleBalance: "تسویه انجام نشد",
+    currency: "ارز",
+    darkTheme: "تاریک",
+    debtAdded: "بدهی اضافه شد",
+    delete: "حذف",
+    deleteAll: "حذف همه",
+    deleteAllConfirm: "همه رکوردهای ذخیره‌شده حذف شوند؟ این کار قابل برگشت نیست.",
+    deleteRecordConfirm: "رکورد مربوط به {name} حذف شود؟ این کار قابل برگشت نیست.",
+    direction: "جهت",
+    dollarBalanceSettled: "مانده دلار تسویه شد",
+    edit: "ویرایش",
+    emptyHint: "یک شخص اضافه کنید و اولین جابه‌جایی پول را ثبت کنید.",
+    enterAmount: "مبلغ را وارد کنید",
+    enterName: "نام را وارد کنید",
+    entry: "ثبت",
+    export: "خروجی",
+    exportedRecords: "{count} {label} خروجی گرفته شد",
+    from: "از",
+    fullSettlementNote: "تسویه کامل {currency}",
+    iGave: "پول دادم",
+    iOweOverpaid: "بدهی من / اضافه پرداخت",
+    iReceived: "پول گرفتم",
+    import: "ورود داده",
+    importedRecords: "{count} {label} وارد شد",
+    importConfirm: "{count} {label} وارد شود و همه رکوردهای فعلی جایگزین شوند؟ این کار قابل برگشت نیست.",
+    importFormat: "فرمت فایل ورود داده",
+    importFormatHint: "ورود داده یک فایل پشتیبان JSON را می‌پذیرد و بعد از تایید، همه رکوردهای فعلی را جایگزین می‌کند. فایل‌های خروجی همین داشبورد آماده ورود هستند.",
+    internationalDate: "تاریخ میلادی",
+    invalidBackupJson: "یک فایل JSON معتبر انتخاب کنید.",
+    invalidRecordAmount: "{label} مبلغ معتبر برای {currency} ندارد.",
+    invalidRecordCurrency: "{label} ارز پشتیبانی‌نشده دارد.",
+    invalidRecordDirection: "{label} جهت پشتیبانی‌نشده دارد.",
+    invalidTransaction: "{label} تراکنش معتبر نیست.",
+    iranianDate: "تاریخ شمسی",
+    language: "زبان",
+    lightTheme: "روشن",
+    localLedger: "دفتر محلی",
+    manage: "مدیریت",
+    manyPeople: "{count} نفر",
+    manyRecords: "{count} رکورد",
+    missingName: "{label} نام ندارد.",
+    mixed: "ترکیبی",
+    mixedBalance: "مانده ترکیبی",
+    name: "نام",
+    namePlaceholder: "انتخاب یا تایپ نام",
+    netBalance: "مانده خالص",
+    noPersonSelected: "شخصی انتخاب نشده",
+    noRecordsYet: "هنوز رکوردی نیست",
+    notSet: "تنظیم نشده",
+    note: "یادداشت",
+    notePlaceholder: "دلیل یا توضیح",
+    onePerson: "۱ نفر",
+    oneRecord: "۱ رکورد",
+    optionalNote: "یادداشت اختیاری",
+    people: "اشخاص",
+    peopleHint: "روی نام بزنید؛ سپس بدهی اضافه کنید، پرداخت جزئی ثبت کنید یا کامل تسویه کنید.",
+    personMeta: "{records} - آخرین {date}",
+    quickAmount: "مبلغ سریع",
+    quickDebtNote: "بدهی سریع",
+    quickNote: "یادداشت سریع",
+    quickRepaymentNote: "پرداخت سریع",
+    rate: "نرخ",
+    recordDeleted: "رکورد حذف شد",
+    recordRepayment: "ثبت پرداختی",
+    recordSaved: "رکورد ذخیره شد",
+    recordsCleared: "همه رکوردها حذف شدند",
+    recordUpdated: "رکورد به‌روزرسانی شد",
+    repeatedId: "{label} شناسه تکراری دارد.",
+    repaymentRecorded: "پرداخت ثبت شد",
+    result: "نتیجه",
+    saveRecord: "ذخیره رکورد",
+    saving: "در حال ذخیره...",
+    searchPlaceholder: "جستجوی شخص یا یادداشت",
+    selectedPerson: "شخص انتخاب‌شده",
+    selectedPersonActiveHint: "برای پرداخت جزئی، بدهی جدید یا تسویه کامل از دکمه‌های سریع استفاده کنید.",
+    settleAmount: "تسویه {amount}",
+    settleDollar: "تسویه دلار",
+    settleToman: "تسویه تومان",
+    settleConfirm: "{amount} برای {name} تسویه شود؟",
+    setRateFirst: "اول نرخ را وارد کنید",
+    settled: "تسویه شده",
+    storageFailed: "خطای ذخیره‌سازی",
+    storageFailedMessage: "مرورگر نتوانست ذخیره‌سازی محلی این دفتر را باز کند.",
+    switchToDark: "تغییر به حالت تاریک",
+    switchToLight: "تغییر به حالت روشن",
+    theyOweMe: "بدهکارند",
+    theyOweYou: "طلب شما",
+    timeline: "تاریخچه",
+    tomanAmountWhole: "مبلغ تومان باید عدد صحیح باشد",
+    tomanOption: "تومان (T)",
+    tomanShort: "تومان",
+    tomanUnit: "تومان",
+    tomanWholeQuick: "مبلغ تومان را به صورت عدد صحیح وارد کنید",
+    tomanBalanceSettled: "مانده تومان تسویه شد",
+    unsupportedBackup: "فایل پشتیبان باید آرایه transactions داشته باشد.",
+    updateRecord: "به‌روزرسانی رکورد",
+    updating: "در حال به‌روزرسانی...",
+    usdOption: "دلار ($)",
+    youOweOverpaid: "بدهی / اضافه پرداخت",
+    youOweThem: "شما بدهکارید",
+    zeroPeople: "۰ نفر",
+    zeroRecords: "۰ رکورد",
+  },
+};
+
+function t(key, values = {}) {
+  const phrase = translations[currentLanguage]?.[key] ?? translations.en[key] ?? key;
+  return phrase.replace(/\{(\w+)\}/g, (_, valueKey) => values[valueKey] ?? "");
+}
+
+function getLocale() {
+  return currentLanguage === "fa" ? "fa-IR" : undefined;
+}
+
+function getRecordLabel(count) {
+  return t(count === 1 ? "oneRecord" : "manyRecords", { count });
+}
+
+function getPeopleLabel(count) {
+  return t(count === 1 ? "onePerson" : "manyPeople", { count });
+}
+
+function updateStaticText() {
+  document.querySelectorAll("[data-i18n]").forEach((element) => {
+    element.textContent = t(element.dataset.i18n);
+  });
+
+  document.querySelectorAll("[data-i18n-placeholder]").forEach((element) => {
+    element.placeholder = t(element.dataset.i18nPlaceholder);
+  });
+}
+
+function updateSaveButtonLabel() {
+  saveButton.textContent = transactionId.value ? t("updateRecord") : t("saveRecord");
+}
+
+function applyTheme(theme, options = {}) {
+  currentTheme = theme === "dark" ? "dark" : "light";
+  document.documentElement.dataset.theme = currentTheme;
+  themeToggle.setAttribute("aria-pressed", String(currentTheme === "dark"));
+  themeToggle.setAttribute("aria-label", t(currentTheme === "dark" ? "switchToLight" : "switchToDark"));
+  themeToggleLabel.textContent = t(currentTheme === "dark" ? "lightTheme" : "darkTheme");
+
+  if (options.save !== false) localStorage.setItem(THEME_KEY, currentTheme);
+}
+
+function applyLanguage(language, options = {}) {
+  currentLanguage = language === "fa" ? "fa" : "en";
+  document.documentElement.lang = currentLanguage;
+  document.documentElement.dir = currentLanguage === "fa" ? "rtl" : "ltr";
+  languageSelect.value = currentLanguage;
+  updateStaticText();
+  updateSaveButtonLabel();
+  applyTheme(currentTheme, { save: false });
+
+  if (options.save !== false) localStorage.setItem(LANGUAGE_KEY, currentLanguage);
+  if (options.render !== false) render();
+}
 
 function formatCurrency(amount, currency) {
   if (currency === "TOMAN") {
-    return `${new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(amount)} T`;
+    return `${new Intl.NumberFormat(getLocale(), { maximumFractionDigits: 0 }).format(amount)} ${t("tomanUnit")}`;
   }
 
-  return new Intl.NumberFormat(undefined, {
+  return new Intl.NumberFormat(getLocale(), {
     style: "currency",
     currency: "USD",
   }).format(amount);
@@ -187,16 +501,16 @@ function showToast(message) {
 
 function renderFatalError(error) {
   const main = document.createElement("main");
-  main.className = "shell";
+  main.className = "app-shell";
 
   const panel = document.createElement("div");
-  panel.className = "panel module-card";
+  panel.className = "panel";
 
   const title = document.createElement("h1");
-  title.textContent = "Storage failed";
+  title.textContent = t("storageFailed");
 
   const message = document.createElement("p");
-  message.textContent = getErrorMessage(error, "The browser could not open local storage for this ledger.");
+  message.textContent = getErrorMessage(error, t("storageFailedMessage"));
 
   panel.append(title, message);
   main.append(panel);
@@ -204,14 +518,14 @@ function renderFatalError(error) {
 }
 
 function getDirectionLabel(direction) {
-  return direction === "theyOwe" ? "I gave" : "I received";
+  return direction === "theyOwe" ? t("iGave") : t("iReceived");
 }
 
 function getStatusText(status) {
-  if (status === "settled") return "Settled";
-  if (status === "mixed") return "Mixed balance";
-  if (status === "theyOwe") return "They owe you";
-  return "You owe them";
+  if (status === "settled") return t("settled");
+  if (status === "mixed") return t("mixedBalance");
+  if (status === "theyOwe") return t("theyOweYou");
+  return t("youOweThem");
 }
 
 function getTodayDate() {
@@ -220,11 +534,11 @@ function getTodayDate() {
 
 function renderRateTools() {
   const rate = getRate();
-  ratePreview.textContent = rate ? formatCurrency(rate, "TOMAN") : "not set";
+  ratePreview.textContent = rate ? formatCurrency(rate, "TOMAN") : t("notSet");
 
   const amount = Number(convertAmountInput.value);
   if (!rate || !amount) {
-    conversionResult.textContent = rate ? "Enter an amount" : "Set a rate first";
+    conversionResult.textContent = rate ? t("enterAmount") : t("setRateFirst");
     return;
   }
 
@@ -239,7 +553,7 @@ function renderRateTools() {
 function formatDate(date) {
   if (!date) return "-";
 
-  return new Date(`${date}T00:00:00`).toLocaleDateString(undefined, {
+  return new Date(`${date}T00:00:00`).toLocaleDateString(getLocale(), {
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -262,33 +576,33 @@ function normalizeRecordId(value) {
 
 function normalizeImportedTransactions(backup) {
   if (!backup || typeof backup !== "object" || !Array.isArray(backup.transactions)) {
-    throw new Error("Backup file must include a transactions array.");
+    throw new Error(t("unsupportedBackup"));
   }
 
   const ids = new Set();
   return backup.transactions.map((transaction, index) => {
     const label = `Record ${index + 1}`;
     if (!transaction || typeof transaction !== "object" || Array.isArray(transaction)) {
-      throw new Error(`${label} is not a valid transaction.`);
+      throw new Error(t("invalidTransaction", { label }));
     }
 
     if (transaction.currency !== "USD" && transaction.currency !== "TOMAN") {
-      throw new Error(`${label} has an unsupported currency.`);
+      throw new Error(t("invalidRecordCurrency", { label }));
     }
 
     if (transaction.direction !== "theyOwe" && transaction.direction !== "iOwe") {
-      throw new Error(`${label} has an unsupported direction.`);
+      throw new Error(t("invalidRecordDirection", { label }));
     }
 
     const name = normalizeName(String(transaction.name || ""));
     const amount = Number(transaction.amount);
-    if (!name) throw new Error(`${label} is missing a name.`);
+    if (!name) throw new Error(t("missingName", { label }));
     if (!isValidAmountForCurrency(amount, transaction.currency)) {
-      throw new Error(`${label} has an invalid amount for ${transaction.currency}.`);
+      throw new Error(t("invalidRecordAmount", { label, currency: transaction.currency }));
     }
 
     const id = normalizeRecordId(transaction.id);
-    if (ids.has(id)) throw new Error(`${label} repeats another transaction id.`);
+    if (ids.has(id)) throw new Error(t("repeatedId", { label }));
     ids.add(id);
 
     const createdAt = Number(transaction.createdAt);
@@ -313,7 +627,7 @@ function normalizeImportedRate(backup) {
   if (!value) return "";
 
   const rate = Number(value);
-  if (!Number.isFinite(rate) || rate < 1) throw new Error("Backup rate must be at least 1 Toman.");
+  if (!Number.isFinite(rate) || rate < 1) throw new Error(t("backupRateInvalid"));
   return String(Math.round(rate));
 }
 
@@ -337,7 +651,7 @@ function updateQuickInputForCurrency() {
   const isToman = quickCurrencyInput.value === "TOMAN";
   quickAmountInput.step = isToman ? "1" : "0.01";
   quickAmountInput.inputMode = isToman ? "numeric" : "decimal";
-  quickAmountInput.placeholder = isToman ? "1000000" : "Amount";
+  quickAmountInput.placeholder = isToman ? "1000000" : t("amountPlaceholder");
 }
 
 function buildBackup() {
@@ -368,14 +682,14 @@ async function importBackupFile(file) {
   try {
     backup = JSON.parse(await file.text());
   } catch {
-    throw new Error("Choose a valid JSON backup file.");
+    throw new Error(t("invalidBackupJson"));
   }
 
   const importedTransactions = normalizeImportedTransactions(backup);
   const importedRate = normalizeImportedRate(backup);
-  const recordLabel = importedTransactions.length === 1 ? "record" : "records";
+  const recordLabel = getRecordLabel(importedTransactions.length);
   const confirmed = confirm(
-    `Import ${importedTransactions.length} ${recordLabel} and replace every current record? This cannot be undone.`,
+    t("importConfirm", { count: importedTransactions.length, label: recordLabel }),
   );
   if (!confirmed) return false;
 
@@ -398,7 +712,7 @@ async function importBackupFile(file) {
   searchInput.value = "";
   resetForm();
   await refresh();
-  showToast(`Imported ${importedTransactions.length} ${recordLabel}`);
+  showToast(t("importedRecords", { count: importedTransactions.length, label: recordLabel }));
   return true;
 }
 
@@ -512,16 +826,16 @@ function setQuickControlsEnabled(enabled) {
 
 function renderSelectedPerson() {
   if (!selectedPersonName) {
-    selectedPersonTitle.textContent = "Choose a person";
-    selectedPersonHint.textContent = "Click a person from the list to work without typing their name again.";
-    selectedPersonStatus.textContent = "No person selected";
+    selectedPersonTitle.textContent = t("choosePerson");
+    selectedPersonHint.textContent = t("choosePersonHint");
+    selectedPersonStatus.textContent = t("noPersonSelected");
     selectedPersonBalanceToman.textContent = formatCurrency(0, "TOMAN");
     selectedPersonBalanceUsd.textContent = formatCurrency(0, "USD");
-    selectedPersonCount.textContent = "0 records";
+    selectedPersonCount.textContent = t("zeroRecords");
     settleTomanButton.disabled = true;
     settleUsdButton.disabled = true;
-    settleTomanButton.textContent = "Settle Toman";
-    settleUsdButton.textContent = "Settle Dollar";
+    settleTomanButton.textContent = t("settleToman");
+    settleUsdButton.textContent = t("settleDollar");
     setQuickControlsEnabled(false);
     return;
   }
@@ -531,15 +845,19 @@ function renderSelectedPerson() {
   const usdBalance = person.balances.USD;
 
   selectedPersonTitle.textContent = person.name;
-  selectedPersonHint.textContent = "Use quick actions here for partial repayment, new debt, or full settlement.";
+  selectedPersonHint.textContent = t("selectedPersonActiveHint");
   selectedPersonStatus.textContent = getStatusText(person.status);
   selectedPersonBalanceToman.textContent = `${tomanBalance < 0 ? "-" : ""}${formatCurrency(Math.abs(tomanBalance), "TOMAN")}`;
   selectedPersonBalanceUsd.textContent = `${usdBalance < 0 ? "-" : ""}${formatCurrency(Math.abs(usdBalance), "USD")}`;
-  selectedPersonCount.textContent = `${person.count} ${person.count === 1 ? "record" : "records"}`;
+  selectedPersonCount.textContent = getRecordLabel(person.count);
   settleTomanButton.disabled = tomanBalance === 0;
   settleUsdButton.disabled = usdBalance === 0;
-  settleTomanButton.textContent = tomanBalance ? `Settle ${formatCurrency(Math.abs(tomanBalance), "TOMAN")}` : "Settle Toman";
-  settleUsdButton.textContent = usdBalance ? `Settle ${formatCurrency(Math.abs(usdBalance), "USD")}` : "Settle Dollar";
+  settleTomanButton.textContent = tomanBalance
+    ? t("settleAmount", { amount: formatCurrency(Math.abs(tomanBalance), "TOMAN") })
+    : t("settleToman");
+  settleUsdButton.textContent = usdBalance
+    ? t("settleAmount", { amount: formatCurrency(Math.abs(usdBalance), "USD") })
+    : t("settleDollar");
   setQuickControlsEnabled(true);
 }
 
@@ -553,7 +871,7 @@ function formatBalanceLines(balances) {
 function renderPeople(records) {
   const matchingNames = new Set(records.map((transaction) => transaction.name));
   const people = groupByPerson(transactions).filter((person) => matchingNames.has(person.name));
-  peopleCount.textContent = `${people.length} ${people.length === 1 ? "person" : "people"}`;
+  peopleCount.textContent = getPeopleLabel(people.length);
   peopleList.replaceChildren();
 
   if (!people.length) {
@@ -566,7 +884,7 @@ function renderPeople(records) {
     card.className = `person-card status-${person.status}${person.name === selectedPersonName ? " is-selected" : ""}`;
     card.tabIndex = 0;
     card.setAttribute("role", "button");
-    card.setAttribute("aria-label", `Open ${person.name}`);
+    card.setAttribute("aria-label", person.name);
     card.dataset.personName = person.name;
 
     const statusText = getStatusText(person.status);
@@ -577,7 +895,7 @@ function renderPeople(records) {
     card.innerHTML = `
       <div>
         <p class="person-name" dir="auto"></p>
-        <p class="person-meta">${person.count} record${person.count === 1 ? "" : "s"} - last ${formatDate(person.lastDate)}</p>
+        <p class="person-meta">${t("personMeta", { records: getRecordLabel(person.count), date: formatDate(person.lastDate) })}</p>
       </div>
       <div class="person-status status-${person.status}">
         <span>${statusText}</span>
@@ -627,14 +945,14 @@ function renderTable(records) {
       editButton.type = "button";
       editButton.dataset.action = "edit";
       editButton.dataset.id = transaction.id;
-      editButton.textContent = "Edit";
+      editButton.textContent = t("edit");
 
       const deleteButton = document.createElement("button");
       deleteButton.className = "mini-btn";
       deleteButton.type = "button";
       deleteButton.dataset.action = "delete";
       deleteButton.dataset.id = transaction.id;
-      deleteButton.textContent = "Delete";
+      deleteButton.textContent = t("delete");
 
       row.querySelector(".record-direction").append(tag);
       row.querySelector(".record-name").textContent = transaction.name;
@@ -667,7 +985,7 @@ function resetForm() {
   dateInput.value = "";
   iranianDateInput.value = "";
   updateAmountInputForCurrency();
-  saveButton.textContent = "Save record";
+  updateSaveButtonLabel();
 }
 
 function selectPerson(name, options = {}) {
@@ -720,16 +1038,16 @@ async function handleQuickTransaction(direction) {
   const currency = normalizeCurrency(quickCurrencyInput.value);
   const amount = Number(quickAmountInput.value);
   if (!isValidAmountForCurrency(amount, currency)) {
-    showToast(currency === "TOMAN" ? "Enter a whole Toman amount" : "Enter an amount greater than 0");
+    showToast(currency === "TOMAN" ? t("tomanWholeQuick") : t("amountGreaterThanZero"));
     return;
   }
 
-  const defaultNote = direction === "theyOwe" ? "Quick debt" : "Quick repayment";
+  const defaultNote = direction === "theyOwe" ? t("quickDebtNote") : t("quickRepaymentNote");
   try {
     await saveQuickTransaction(direction, amount, currency, quickNoteInput.value.trim() || defaultNote);
-    showToast(direction === "theyOwe" ? "Debt added" : "Repayment recorded");
+    showToast(direction === "theyOwe" ? t("debtAdded") : t("repaymentRecorded"));
   } catch (error) {
-    showToast(getErrorMessage(error, "Could not save quick record"));
+    showToast(getErrorMessage(error, t("couldNotSaveQuickRecord")));
   }
 }
 
@@ -742,14 +1060,14 @@ async function settleSelectedPerson(currency) {
 
   const direction = balance > 0 ? "iOwe" : "theyOwe";
   const amount = Math.abs(balance);
-  const confirmed = confirm(`Settle ${formatCurrency(amount, currency)} for ${selectedPersonName}?`);
+  const confirmed = confirm(t("settleConfirm", { amount: formatCurrency(amount, currency), name: selectedPersonName }));
   if (!confirmed) return;
 
   try {
-    await saveQuickTransaction(direction, amount, currency, `Full ${currency} settlement`);
-    showToast(`${currency === "TOMAN" ? "Toman" : "Dollar"} balance settled`);
+    await saveQuickTransaction(direction, amount, currency, t("fullSettlementNote", { currency }));
+    showToast(currency === "TOMAN" ? t("tomanBalanceSettled") : t("dollarBalanceSettled"));
   } catch (error) {
-    showToast(getErrorMessage(error, "Could not settle balance"));
+    showToast(getErrorMessage(error, t("couldNotSettleBalance")));
   }
 }
 
@@ -762,23 +1080,23 @@ form.addEventListener("submit", async (event) => {
   const currency = normalizeCurrency(transactionCurrencyInput.value);
 
   if (!name) {
-    showToast("Enter a name");
+    showToast(t("enterName"));
     return;
   }
 
   if (!Number.isFinite(amount) || amount <= 0) {
-    showToast("Enter an amount greater than 0");
+    showToast(t("amountGreaterThanZero"));
     return;
   }
 
   if (!isValidAmountForCurrency(amount, currency)) {
-    showToast("Toman amounts must be whole numbers");
+    showToast(t("tomanAmountWhole"));
     return;
   }
 
   const existing = transactions.find((item) => item.id === transactionId.value);
   saveButton.disabled = true;
-  saveButton.textContent = existing ? "Updating..." : "Saving...";
+  saveButton.textContent = existing ? t("updating") : t("saving");
   const record = {
     id: transactionId.value || crypto.randomUUID(),
     name,
@@ -803,12 +1121,12 @@ form.addEventListener("submit", async (event) => {
     searchInput.value = name;
     resetForm();
     await refresh();
-    showToast(existing ? "Record updated" : "Record saved");
+    showToast(existing ? t("recordUpdated") : t("recordSaved"));
   } catch (error) {
-    showToast(getErrorMessage(error, "Could not save record"));
+    showToast(getErrorMessage(error, t("couldNotSaveRecord")));
   } finally {
     saveButton.disabled = false;
-    saveButton.textContent = transactionId.value ? "Update record" : "Save record";
+    saveButton.textContent = transactionId.value ? t("updateRecord") : t("saveRecord");
   }
 });
 
@@ -820,7 +1138,7 @@ recordsTable.addEventListener("click", async (event) => {
   if (!record) return;
 
   if (button.dataset.action === "delete") {
-    const confirmed = confirm(`Delete the record for ${record.name}? This cannot be undone.`);
+    const confirmed = confirm(t("deleteRecordConfirm", { name: record.name }));
     if (!confirmed) return;
 
     try {
@@ -829,9 +1147,9 @@ recordsTable.addEventListener("click", async (event) => {
         details: { record },
       });
       await refresh();
-      showToast("Record deleted");
+      showToast(t("recordDeleted"));
     } catch (error) {
-      showToast(getErrorMessage(error, "Could not delete record"));
+      showToast(getErrorMessage(error, t("couldNotDeleteRecord")));
     }
     return;
   }
@@ -845,7 +1163,7 @@ recordsTable.addEventListener("click", async (event) => {
   iranianDateInput.value = record.iranianDate || "";
   noteInput.value = record.note || "";
   form.elements.direction.value = record.direction;
-  saveButton.textContent = "Update record";
+  saveButton.textContent = t("updateRecord");
   selectedPersonName = record.name;
   searchInput.value = record.name;
   render();
@@ -868,7 +1186,7 @@ peopleList.addEventListener("keydown", (event) => {
 
 clearAllButton.addEventListener("click", async () => {
   if (!transactions.length) return;
-  const confirmed = confirm("Delete every saved record? This cannot be undone.");
+  const confirmed = confirm(t("deleteAllConfirm"));
   if (!confirmed) return;
   clearAllButton.disabled = true;
   try {
@@ -880,15 +1198,17 @@ clearAllButton.addEventListener("click", async () => {
     searchInput.value = "";
     resetForm();
     await refresh();
-    showToast("All records deleted");
+    showToast(t("recordsCleared"));
   } catch (error) {
-    showToast(getErrorMessage(error, "Could not delete records"));
+    showToast(getErrorMessage(error, t("couldNotDeleteRecords")));
   } finally {
     clearAllButton.disabled = false;
   }
 });
 
 resetButton.addEventListener("click", resetForm);
+languageSelect.addEventListener("change", () => applyLanguage(languageSelect.value));
+themeToggle.addEventListener("click", () => applyTheme(currentTheme === "dark" ? "light" : "dark"));
 transactionCurrencyInput.addEventListener("change", updateAmountInputForCurrency);
 quickCurrencyInput.addEventListener("change", updateQuickInputForCurrency);
 nameInput.addEventListener("change", () => {
@@ -911,9 +1231,9 @@ convertFromInput.addEventListener("change", renderRateTools);
 exportButton.addEventListener("click", () => {
   try {
     exportBackup();
-    showToast(`Exported ${transactions.length} ${transactions.length === 1 ? "record" : "records"}`);
+    showToast(t("exportedRecords", { count: transactions.length, label: getRecordLabel(transactions.length) }));
   } catch (error) {
-    showToast(getErrorMessage(error, "Could not export backup"));
+    showToast(getErrorMessage(error, t("couldNotExportBackup")));
   }
 });
 importButton.addEventListener("click", () => importFileInput.click());
@@ -925,7 +1245,7 @@ importFileInput.addEventListener("change", async () => {
   try {
     await importBackupFile(file);
   } catch (error) {
-    showToast(getErrorMessage(error, "Could not import backup"));
+    showToast(getErrorMessage(error, t("couldNotImportBackup")));
   } finally {
     importButton.disabled = false;
     importFileInput.value = "";
@@ -933,6 +1253,10 @@ importFileInput.addEventListener("change", async () => {
 });
 
 async function init() {
+  const savedTheme = localStorage.getItem(THEME_KEY);
+  const preferredTheme = window.matchMedia?.("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  applyTheme(savedTheme || preferredTheme, { save: false });
+  applyLanguage(localStorage.getItem(LANGUAGE_KEY) || "en", { save: false, render: false });
   rateInput.value = localStorage.getItem(RATE_KEY) || "";
   updateAmountInputForCurrency();
   updateQuickInputForCurrency();

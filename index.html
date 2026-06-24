@@ -16,21 +16,62 @@
     <main class="app-shell">
       <header class="top-bar">
         <div class="brand-block">
-          <p class="eyebrow">Local ledger</p>
-          <h1 id="page-title">Money Ledger</h1>
+          <p class="eyebrow" data-i18n="localLedger">Local ledger</p>
+          <h1 id="page-title" data-i18n="appTitle">Money Ledger</h1>
         </div>
 
-        <div class="top-actions" aria-label="Data actions">
-          <button class="quiet-btn" type="button" id="exportButton">Export</button>
-          <button class="quiet-btn" type="button" id="importButton">Import</button>
-          <button class="danger-btn" type="button" id="clearAllButton">Delete all</button>
-          <input id="importFile" type="file" accept="application/json,.json" hidden />
+        <div class="header-tools">
+          <div class="preference-actions" aria-label="Display preferences">
+            <label class="language-control">
+              <span data-i18n="language">Language</span>
+              <select id="languageSelect" aria-label="Language">
+                <option value="en">English</option>
+                <option value="fa">فارسی</option>
+              </select>
+            </label>
+            <button class="theme-toggle" type="button" id="themeToggle" aria-pressed="false">
+              <span class="theme-toggle-track" aria-hidden="true">
+                <span class="theme-toggle-orb"></span>
+              </span>
+              <span id="themeToggleLabel" data-i18n="darkTheme">Dark</span>
+            </button>
+          </div>
+
+          <div class="top-actions" aria-label="Data actions">
+            <button class="quiet-btn" type="button" id="exportButton" data-i18n="export">Export</button>
+            <button class="quiet-btn" type="button" id="importButton" data-i18n="import">Import</button>
+            <button class="danger-btn" type="button" id="clearAllButton" data-i18n="deleteAll">Delete all</button>
+            <input id="importFile" type="file" accept="application/json,.json" hidden />
+          </div>
         </div>
       </header>
 
+      <details class="import-guide">
+        <summary data-i18n="importFormat">Import file format</summary>
+        <p data-i18n="importFormatHint">Import accepts a JSON backup and replaces every current record after confirmation. Files exported from this dashboard already match this format.</p>
+        <pre><code>{
+  "app": "money-ledger",
+  "version": 1,
+  "usdToTomanRate": "60000",
+  "transactions": [
+    {
+      "id": "optional-stable-id-1",
+      "name": "Person name",
+      "amount": 500000,
+      "currency": "TOMAN",
+      "direction": "theyOwe",
+      "date": "2026-06-20",
+      "iranianDate": "",
+      "note": "Optional note",
+      "createdAt": 1782000000000
+    }
+  ]
+}</code></pre>
+      </details>
+
       <section class="summary-grid" id="ledger" aria-label="Current totals">
         <article class="summary-card is-positive">
-          <span>They owe you</span>
+          <span data-i18n="theyOweYou">They owe you</span>
           <div class="amount-line">
             <strong id="totalOwedToMeToman">0 T</strong>
             <b id="totalOwedToMeUsd">$0.00</b>
@@ -38,7 +79,7 @@
         </article>
 
         <article class="summary-card is-negative">
-          <span>You owe / overpaid</span>
+          <span data-i18n="youOweOverpaid">You owe / overpaid</span>
           <div class="amount-line">
             <strong id="totalIOweToman">0 T</strong>
             <b id="totalIOweUsd">$0.00</b>
@@ -46,7 +87,7 @@
         </article>
 
         <article class="summary-card is-neutral">
-          <span>Net balance</span>
+          <span data-i18n="netBalance">Net balance</span>
           <div class="amount-line">
             <strong id="netBalanceToman">0 T</strong>
             <b id="netBalanceUsd">$0.00</b>
@@ -59,146 +100,146 @@
           <form class="panel entry-panel" id="transactionForm">
             <div class="panel-title-row">
               <div>
-                <p class="eyebrow">Entry</p>
-                <h2>Add record</h2>
+                <p class="eyebrow" data-i18n="entry">Entry</p>
+                <h2 data-i18n="addRecord">Add record</h2>
               </div>
-              <button class="text-btn" type="button" id="resetButton">Clear</button>
+              <button class="text-btn" type="button" id="resetButton" data-i18n="clear">Clear</button>
             </div>
 
             <input type="hidden" id="transactionId" />
             <datalist id="personSuggestions"></datalist>
 
             <label class="field field-wide">
-              <span>Name</span>
-              <input id="name" name="name" type="text" list="personSuggestions" placeholder="Pick or type a person" dir="auto" required />
+              <span data-i18n="name">Name</span>
+              <input id="name" name="name" type="text" list="personSuggestions" placeholder="Pick or type a person" data-i18n-placeholder="namePlaceholder" dir="auto" required />
             </label>
 
             <div class="field-grid">
               <label class="field">
-                <span>Amount</span>
+                <span data-i18n="amount">Amount</span>
                 <input id="amount" name="amount" type="number" inputmode="decimal" min="0.01" step="0.01" placeholder="250" required />
               </label>
 
               <label class="field">
-                <span>Currency</span>
+                <span data-i18n="currency">Currency</span>
                 <select id="transactionCurrency" name="currency" required>
-                  <option value="USD">Dollar ($)</option>
-                  <option value="TOMAN">Toman (T)</option>
+                  <option value="USD" data-i18n="usdOption">Dollar ($)</option>
+                  <option value="TOMAN" data-i18n="tomanOption">Toman (T)</option>
                 </select>
               </label>
             </div>
 
             <fieldset class="direction-switch">
-              <legend>Direction</legend>
+              <legend data-i18n="direction">Direction</legend>
               <label>
                 <input type="radio" name="direction" value="theyOwe" checked />
-                <span>I gave</span>
+                <span data-i18n="iGave">I gave</span>
               </label>
               <label>
                 <input type="radio" name="direction" value="iOwe" />
-                <span>I received</span>
+                <span data-i18n="iReceived">I received</span>
               </label>
             </fieldset>
 
             <div class="field-grid">
               <label class="field">
-                <span>International date</span>
+                <span data-i18n="internationalDate">International date</span>
                 <input id="date" name="date" type="date" />
               </label>
 
               <label class="field">
-                <span>Iranian date</span>
+                <span data-i18n="iranianDate">Iranian date</span>
                 <input id="iranianDate" name="iranianDate" type="text" placeholder="۲۵ خرداد ۱۴۰۵" dir="auto" />
               </label>
             </div>
 
             <label class="field field-wide">
-              <span>Note</span>
-              <textarea id="note" name="note" rows="2" placeholder="Reason or detail" dir="auto"></textarea>
+              <span data-i18n="note">Note</span>
+              <textarea id="note" name="note" rows="2" placeholder="Reason or detail" data-i18n-placeholder="notePlaceholder" dir="auto"></textarea>
             </label>
 
-            <button class="primary-btn" type="submit" id="saveButton">Save record</button>
+            <button class="primary-btn" type="submit" id="saveButton" data-i18n="saveRecord">Save record</button>
           </form>
 
           <section class="panel person-workspace" id="selectedPersonPanel" aria-labelledby="selectedPersonTitle">
             <div class="panel-title-row">
               <div>
-                <p class="eyebrow">Selected person</p>
-                <h2 id="selectedPersonTitle">Choose a person</h2>
+                <p class="eyebrow" data-i18n="selectedPerson">Selected person</p>
+                <h2 id="selectedPersonTitle" data-i18n="choosePerson">Choose a person</h2>
               </div>
-              <button class="text-btn" type="button" id="clearPersonButton">Clear</button>
+              <button class="text-btn" type="button" id="clearPersonButton" data-i18n="clear">Clear</button>
             </div>
 
-            <p class="workspace-hint" id="selectedPersonHint">Click a person from the list to work without typing their name again.</p>
+            <p class="workspace-hint" id="selectedPersonHint" data-i18n="choosePersonHint">Click a person from the list to work without typing their name again.</p>
 
             <div class="person-ledger" aria-label="Selected person balance">
-              <span id="selectedPersonStatus">No person selected</span>
+              <span id="selectedPersonStatus" data-i18n="noPersonSelected">No person selected</span>
               <strong id="selectedPersonBalanceToman">0 T</strong>
               <strong id="selectedPersonBalanceUsd">$0.00</strong>
-              <small id="selectedPersonCount">0 records</small>
+              <small id="selectedPersonCount" data-i18n="zeroRecords">0 records</small>
             </div>
 
             <div class="quick-grid" aria-label="Quick transaction controls">
               <label class="field">
-                <span>Quick amount</span>
-                <input id="quickAmount" type="number" inputmode="decimal" min="0.01" step="0.01" placeholder="Amount" disabled />
+                <span data-i18n="quickAmount">Quick amount</span>
+                <input id="quickAmount" type="number" inputmode="decimal" min="0.01" step="0.01" placeholder="Amount" data-i18n-placeholder="amountPlaceholder" disabled />
               </label>
 
               <label class="field">
-                <span>Currency</span>
+                <span data-i18n="currency">Currency</span>
                 <select id="quickCurrency" disabled>
-                  <option value="USD">Dollar ($)</option>
-                  <option value="TOMAN">Toman (T)</option>
+                  <option value="USD" data-i18n="usdOption">Dollar ($)</option>
+                  <option value="TOMAN" data-i18n="tomanOption">Toman (T)</option>
                 </select>
               </label>
             </div>
 
             <label class="field field-wide">
-              <span>Quick note</span>
-              <input id="quickNote" type="text" placeholder="Optional note" dir="auto" disabled />
+              <span data-i18n="quickNote">Quick note</span>
+              <input id="quickNote" type="text" placeholder="Optional note" data-i18n-placeholder="optionalNote" dir="auto" disabled />
             </label>
 
             <div class="quick-actions">
-              <button class="positive-btn" type="button" id="quickDebtButton" disabled>Add debt</button>
-              <button class="negative-btn" type="button" id="quickRepaymentButton" disabled>Record repayment</button>
+              <button class="positive-btn" type="button" id="quickDebtButton" data-i18n="addDebt" disabled>Add debt</button>
+              <button class="negative-btn" type="button" id="quickRepaymentButton" data-i18n="recordRepayment" disabled>Record repayment</button>
             </div>
 
             <div class="settle-actions">
-              <button class="quiet-btn" type="button" id="settleTomanButton" disabled>Settle Toman</button>
-              <button class="quiet-btn" type="button" id="settleUsdButton" disabled>Settle Dollar</button>
+              <button class="quiet-btn" type="button" id="settleTomanButton" data-i18n="settleToman" disabled>Settle Toman</button>
+              <button class="quiet-btn" type="button" id="settleUsdButton" data-i18n="settleDollar" disabled>Settle Dollar</button>
             </div>
           </section>
 
           <section class="panel rate-panel" aria-labelledby="rate-title">
             <div class="panel-title-row compact">
               <div>
-                <p class="eyebrow">Rate</p>
-                <h2 id="rate-title">Converter</h2>
+                <p class="eyebrow" data-i18n="rate">Rate</p>
+                <h2 id="rate-title" data-i18n="converter">Converter</h2>
               </div>
               <span class="rate-pill">1 USD = <b id="ratePreview">0 T</b></span>
             </div>
 
             <div class="rate-line">
               <label class="field">
-                <span>Rate</span>
+                <span data-i18n="rate">Rate</span>
                 <input id="usdToTomanRate" type="number" inputmode="decimal" min="1" step="1" placeholder="60000" />
               </label>
               <label class="field">
-                <span>Convert</span>
+                <span data-i18n="convert">Convert</span>
                 <input id="convertAmount" type="number" inputmode="decimal" min="0" step="0.01" placeholder="100" />
               </label>
               <label class="field compact-select">
-                <span>From</span>
+                <span data-i18n="from">From</span>
                 <select id="convertFrom">
                   <option value="USD">USD</option>
-                  <option value="TOMAN">Toman</option>
+                  <option value="TOMAN" data-i18n="tomanShort">Toman</option>
                 </select>
               </label>
             </div>
 
             <div class="conversion-result">
-              <span>Result</span>
-              <strong id="conversionResult">Set a rate first</strong>
+              <span data-i18n="result">Result</span>
+              <strong id="conversionResult" data-i18n="setRateFirst">Set a rate first</strong>
             </div>
           </section>
         </aside>
@@ -207,32 +248,32 @@
           <section class="panel people-panel" aria-labelledby="people-title">
             <div class="panel-title-row">
               <div>
-                <p class="eyebrow">People</p>
-                <h2 id="people-title">Balances</h2>
+                <p class="eyebrow" data-i18n="people">People</p>
+                <h2 id="people-title" data-i18n="balances">Balances</h2>
               </div>
-              <span id="peopleCount" class="count-pill">0 people</span>
+              <span id="peopleCount" class="count-pill" data-i18n="zeroPeople">0 people</span>
             </div>
 
             <div class="filter-row">
-              <input id="search" type="search" placeholder="Search people or notes" aria-label="Search records" dir="auto" />
+              <input id="search" type="search" placeholder="Search people or notes" data-i18n-placeholder="searchPlaceholder" aria-label="Search records" dir="auto" />
               <select id="statusFilter" aria-label="Filter by status">
-                <option value="all">All balances</option>
-                <option value="theyOwe">They owe me</option>
-                <option value="iOwe">I owe / overpaid</option>
-                <option value="mixed">Mixed</option>
-                <option value="settled">Settled</option>
+                <option value="all" data-i18n="allBalances">All balances</option>
+                <option value="theyOwe" data-i18n="theyOweMe">They owe me</option>
+                <option value="iOwe" data-i18n="iOweOverpaid">I owe / overpaid</option>
+                <option value="mixed" data-i18n="mixed">Mixed</option>
+                <option value="settled" data-i18n="settled">Settled</option>
               </select>
             </div>
 
-            <p class="filter-note">Click a name to open that person, then add debt, record a partial repayment, or settle fully.</p>
+            <p class="filter-note" data-i18n="peopleHint">Click a name to open that person, then add debt, record a partial repayment, or settle fully.</p>
             <div id="peopleList" class="people-list"></div>
           </section>
 
           <section class="panel table-panel" aria-labelledby="activity-title">
             <div class="panel-title-row">
               <div>
-                <p class="eyebrow">Timeline</p>
-                <h2 id="activity-title">All records</h2>
+                <p class="eyebrow" data-i18n="timeline">Timeline</p>
+                <h2 id="activity-title" data-i18n="allRecords">All records</h2>
               </div>
             </div>
 
@@ -240,13 +281,13 @@
               <table>
                 <thead>
                   <tr>
-                    <th>Name</th>
-                    <th>Direction</th>
-                    <th>Amount</th>
-                    <th>International date</th>
-                    <th>Iranian date</th>
-                    <th>Note</th>
-                    <th>Manage</th>
+                    <th data-i18n="name">Name</th>
+                    <th data-i18n="direction">Direction</th>
+                    <th data-i18n="amount">Amount</th>
+                    <th data-i18n="internationalDate">International date</th>
+                    <th data-i18n="iranianDate">Iranian date</th>
+                    <th data-i18n="note">Note</th>
+                    <th data-i18n="manage">Manage</th>
                   </tr>
                 </thead>
                 <tbody id="recordsTable"></tbody>
@@ -259,8 +300,8 @@
 
     <template id="emptyStateTemplate">
       <div class="empty-state">
-        <strong>No records yet</strong>
-        <p>Add a person and record the first money movement.</p>
+        <strong data-i18n="noRecordsYet">No records yet</strong>
+        <p data-i18n="emptyHint">Add a person and record the first money movement.</p>
       </div>
     </template>
 
