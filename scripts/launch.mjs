@@ -109,7 +109,7 @@ async function main() {
   await waitForServer();
   openBrowser();
   console.log(`Money Ledger opened at ${appUrl}`);
-  console.log('Use "Stop Money Ledger.command" or `npm run stop` to end the session.');
+  console.log('Use "Stop Money Ledger.app" or `npm run stop` to end the session.');
 }
 
 main().catch((error) => {

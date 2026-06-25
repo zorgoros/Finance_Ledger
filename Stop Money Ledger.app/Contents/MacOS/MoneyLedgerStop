@@ -1,0 +1,26 @@
+#!/bin/zsh
+set -euo pipefail
+
+APP_BUNDLE_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
+REPO_ROOT="$(cd "$APP_BUNDLE_DIR/.." && pwd)"
+
+NODE_BIN="/opt/homebrew/bin/node"
+if [ ! -x "$NODE_BIN" ]; then
+  for candidate in /usr/local/bin/node /usr/bin/node; do
+    if [ -x "$candidate" ]; then
+      NODE_BIN="$candidate"
+      break
+    fi
+  done
+fi
+
+if [ ! -x "$NODE_BIN" ] && command -v node >/dev/null 2>&1; then
+  NODE_BIN="$(command -v node)"
+fi
+
+if [ ! -x "$NODE_BIN" ]; then
+  osascript -e 'display dialog "Node.js is required to stop Money Ledger." buttons {"OK"} default button "OK"' >/dev/null 2>&1 || true
+  exit 1
+fi
+
+exec "$NODE_BIN" "$REPO_ROOT/scripts/stop.mjs"

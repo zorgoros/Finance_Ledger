@@ -3,6 +3,8 @@
 - `apps/web/`: browser UI
 - `apps/api/`: SQLite-backed HTTP server and API
 - `scripts/`: launcher and stop helpers
+- `Money Ledger.app`: Finder-openable one-click launcher
+- `Stop Money Ledger.app`: Finder-openable stop launcher
 - `Open Money Ledger.command`: one-click launcher for macOS
 - `Stop Money Ledger.command`: one-click stop command for macOS
 - `local-data/`: local database files and backups that should stay untracked

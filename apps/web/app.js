@@ -510,7 +510,7 @@ function renderFatalError(error) {
 
   const title = document.createElement("h1");
   const serverRequired = error instanceof Error && error.message.startsWith("SERVER_REQUIRED:");
-  title.textContent = serverRequired ? "Open the launcher" : t("storageFailed");
+  title.textContent = serverRequired ? "Open Money Ledger" : t("storageFailed");
 
   const message = document.createElement("p");
   message.textContent = serverRequired ? error.message.slice("SERVER_REQUIRED:".length).trim() : getErrorMessage(error, t("storageFailedMessage"));
@@ -1495,7 +1495,7 @@ importFileInput.addEventListener("change", async () => {
 
 async function init() {
   if (window.location.protocol === "file:") {
-    throw new Error("SERVER_REQUIRED: Double-click `Open Money Ledger.command` in the project root, or run `npm run launch`, then visit http://localhost:8080/.");
+    throw new Error("SERVER_REQUIRED: Double-click `Money Ledger.app` in the project root, or run `npm run launch`, then visit http://localhost:8080/.");
   }
 
   const savedTheme = await getSetting(THEME_KEY);

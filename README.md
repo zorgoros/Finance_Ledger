@@ -4,12 +4,12 @@ A local finance dashboard for tracking money you gave to people and money you re
 
 ## Open it
 
-On macOS, double-click `Open Money Ledger.command` in the project root.
+On macOS, double-click `Money Ledger.app` in the project root.
 The dashboard opens automatically in your browser.
 
 ## Close it
 
-On macOS, double-click `Stop Money Ledger.command` to stop the background server.
+On macOS, double-click `Stop Money Ledger.app` to stop the background server.
 Closing the browser tab only closes the view; it does not stop the session.
 
 ## Terminal fallback
@@ -19,12 +19,14 @@ If you prefer Terminal:
 ```bash
 npm install
 npm run launch
+npm run stop
 ```
 
-To stop it later:
+Optional macOS fallbacks:
 
-```bash
-npm run stop
+```text
+Open Money Ledger.command
+Stop Money Ledger.command
 ```
 
 ## Repo layout
