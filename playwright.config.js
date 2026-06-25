@@ -7,9 +7,9 @@ export default defineConfig({
     baseURL: "http://127.0.0.1:8080",
   },
   webServer: {
-    command: "python3 -m http.server 8080",
+    command: "mkdir -p test-results && rm -f test-results/smoke.sqlite test-results/smoke.sqlite-shm test-results/smoke.sqlite-wal && MONEY_LEDGER_DB_PATH=test-results/smoke.sqlite node apps/api/index.js",
     url: "http://127.0.0.1:8080",
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
     timeout: 30_000,
   },
 });

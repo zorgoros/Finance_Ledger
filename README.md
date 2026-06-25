@@ -2,26 +2,47 @@
 
 A local finance dashboard for tracking money you gave to people and money you received from them.
 
-## Use it
+## Open it
 
-Open `index.html` in a browser, or run a small local server from this folder:
+On macOS, double-click `Open Money Ledger.command` in the project root.
+The dashboard opens automatically in your browser.
+
+## Close it
+
+On macOS, double-click `Stop Money Ledger.command` to stop the background server.
+Closing the browser tab only closes the view; it does not stop the session.
+
+## Terminal fallback
+
+If you prefer Terminal:
 
 ```bash
-python3 -m http.server 8080
+npm install
+npm run launch
 ```
 
-Then visit `http://localhost:8080`.
+To stop it later:
+
+```bash
+npm run stop
+```
+
+## Repo layout
+
+- `apps/web/`: frontend files
+- `apps/api/`: SQLite server and API routes
+- `local-data/`: local database files, ignored by Git
 
 ## What it does
 
-- Saves records locally in the browser using IndexedDB.
+- Saves records locally in `local-data/money-ledger.sqlite` using SQLite.
 - Tracks name, amount, currency, direction, date, and optional note.
-- Supports separate international and Iranian date fields.
+- Supports Gregorian and Persian date picker modes while storing both international and Iranian date fields.
 - Supports Dollar and Iranian Toman transactions.
 - Keeps Dollar and Toman balances separate in totals and per-person balances.
 - Stores a Dollar-to-Toman rate only for the manual converter.
 - Uses received-money records as repayments or money you owe, depending on the balance.
-- Keeps a local IndexedDB audit log for created, updated, deleted, imported, and cleared records.
+- Keeps a local SQLite audit log for created, updated, deleted, imported, and cleared records.
 - Calculates who owes you and who you owe.
 - Groups balances by person.
 - Lets you click a person to open a focused workspace for that person.
@@ -34,8 +55,14 @@ Then visit `http://localhost:8080`.
 - Lets you export and import JSON backups.
 - Shows totals in both Dollar and Toman without converting saved balances.
 
-Your data stays on the same browser and device unless you clear browser storage.
-Use **Export JSON** regularly if you need a backup or want to move data to another browser.
+Your data stays in the local SQLite file unless you delete `local-data/money-ledger.sqlite`.
+Use **Export JSON** regularly if you need a backup or want to move data to another install.
+
+The database file is ignored by Git and should not be pushed:
+
+```text
+local-data/money-ledger.sqlite
+```
 
 ## Import format
 

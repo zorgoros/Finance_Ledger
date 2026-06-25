@@ -97,7 +97,7 @@
 
       <section class="workspace">
         <aside class="desk-rail">
-          <form class="panel entry-panel" id="transactionForm">
+          <form class="panel entry-panel" id="transactionForm" novalidate>
             <div class="panel-title-row">
               <div>
                 <p class="eyebrow" data-i18n="entry">Entry</p>
@@ -141,13 +141,40 @@
               </label>
             </fieldset>
 
-            <div class="field-grid">
-              <label class="field">
-                <span data-i18n="internationalDate">International date</span>
-                <input id="date" name="date" type="date" />
-              </label>
+            <div class="date-block">
+              <div class="field-grid">
+                <label class="field">
+                  <span data-i18n="datePicker">Date picker</span>
+                  <select id="dateMode" name="dateMode">
+                    <option value="gregorian" data-i18n="gregorianCalendar">Gregorian</option>
+                    <option value="persian" data-i18n="persianCalendar">Persian</option>
+                  </select>
+                </label>
 
-              <label class="field">
+                <label class="field" id="gregorianDatePanel">
+                  <span data-i18n="internationalDate">International date</span>
+                  <input id="date" name="date" type="date" />
+                </label>
+              </div>
+
+              <div class="persian-picker" id="persianPicker" hidden>
+                <label class="field">
+                  <span data-i18n="persianYear">Persian year</span>
+                  <select id="persianYear"></select>
+                </label>
+
+                <label class="field">
+                  <span data-i18n="persianMonth">Persian month</span>
+                  <select id="persianMonth"></select>
+                </label>
+
+                <label class="field">
+                  <span data-i18n="persianDay">Persian day</span>
+                  <select id="persianDay"></select>
+                </label>
+              </div>
+
+              <label class="field field-wide">
                 <span data-i18n="iranianDate">Iranian date</span>
                 <input id="iranianDate" name="iranianDate" type="text" placeholder="۲۵ خرداد ۱۴۰۵" dir="auto" />
               </label>

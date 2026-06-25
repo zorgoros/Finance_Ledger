@@ -17,14 +17,30 @@ test("loads, edits records, exports, and imports a backup", async ({ page }, tes
   await expect(page.locator("#selectedPersonTitle")).toHaveText("Test Person");
   await expect(page.locator("#name")).toHaveValue("Test Person");
   await page.locator("#quickCurrency").selectOption("TOMAN");
+  await expect(page.locator("#quickAmount")).toHaveAttribute("min", "1");
+  await expect(page.locator("#quickAmount")).toHaveAttribute("step", "1");
   await page.locator("#quickAmount").fill("1000");
   await page.locator("#quickDebtButton").click();
   await expect(page.locator("#recordsTable")).toContainText("Quick debt");
 
   await page.locator("#transactionCurrency").selectOption("TOMAN");
+  await expect(page.locator("#amount")).toHaveAttribute("min", "1");
   await expect(page.locator("#amount")).toHaveAttribute("step", "1");
+  await page.locator("#dateMode").selectOption("persian");
+  await page.locator("#persianYear").selectOption("1405");
+  await page.locator("#persianMonth").selectOption("3");
+  await page.locator("#persianDay").selectOption("30");
+  await expect(page.locator("#date")).toHaveValue("2026-06-20");
+  await expect(page.locator("#iranianDate")).toHaveValue("30 Khordad 1405");
+  await page.locator("#name").fill("Toman Person");
+  await page.locator("#amount").fill("2600000");
+  await page.locator("#note").fill("Whole Toman workflow");
+  await page.getByRole("button", { name: "Save record" }).click();
+  await expect(page.locator("#recordsTable")).toContainText("Whole Toman workflow");
 
   await page.locator("#transactionCurrency").selectOption("USD");
+  await expect(page.locator("#amount")).toHaveAttribute("min", "0.01");
+  await expect(page.locator("#amount")).toHaveAttribute("step", "0.01");
   await page.locator("#name").fill("Another Person");
   await page.locator("#amount").fill("12.50");
   await page.locator("#note").fill("Smoke test record");

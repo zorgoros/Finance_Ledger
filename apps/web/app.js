@@ -1,7 +1,4 @@
-const DB_NAME = "money-ledger-db";
-const STORE_NAME = "transactions";
-const AUDIT_STORE_NAME = "auditLog";
-const DB_VERSION = 2;
+const API_BASE = "/api";
 
 const form = document.querySelector("#transactionForm");
 const transactionId = document.querySelector("#transactionId");
@@ -9,7 +6,13 @@ const nameInput = document.querySelector("#name");
 const personSuggestions = document.querySelector("#personSuggestions");
 const amountInput = document.querySelector("#amount");
 const transactionCurrencyInput = document.querySelector("#transactionCurrency");
+const dateModeInput = document.querySelector("#dateMode");
+const gregorianDatePanel = document.querySelector("#gregorianDatePanel");
 const dateInput = document.querySelector("#date");
+const persianPicker = document.querySelector("#persianPicker");
+const persianYearInput = document.querySelector("#persianYear");
+const persianMonthInput = document.querySelector("#persianMonth");
+const persianDayInput = document.querySelector("#persianDay");
 const iranianDateInput = document.querySelector("#iranianDate");
 const noteInput = document.querySelector("#note");
 const saveButton = document.querySelector("#saveButton");
@@ -54,18 +57,21 @@ const settleUsdButton = document.querySelector("#settleUsdButton");
 const emptyStateTemplate = document.querySelector("#emptyStateTemplate");
 const toast = document.querySelector("#toast");
 
-let db;
 let transactions = [];
 let selectedPersonName = "";
 let toastTimer;
 let currentLanguage = "en";
 let currentTheme = "light";
 
-const SEED_KEY = "money-ledger-farsi-notes-2026-06-19-v1";
 const RATE_KEY = "money-ledger-usd-toman-rate";
 const LANGUAGE_KEY = "money-ledger-language";
 const THEME_KEY = "money-ledger-theme";
 const BACKUP_APP_NAME = "money-ledger";
+
+const persianMonthNames = {
+  en: ["Farvardin", "Ordibehesht", "Khordad", "Tir", "Mordad", "Shahrivar", "Mehr", "Aban", "Azar", "Dey", "Bahman", "Esfand"],
+  fa: ["فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد", "شهریور", "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند"],
+};
 
 const translations = {
   en: {
@@ -93,6 +99,7 @@ const translations = {
     couldNotSettleBalance: "Could not settle balance",
     currency: "Currency",
     darkTheme: "Dark",
+    datePicker: "Date picker",
     debtAdded: "Debt added",
     delete: "Delete",
     deleteAll: "Delete all",
@@ -109,6 +116,7 @@ const translations = {
     exportedRecords: "Exported {count} {label}",
     from: "From",
     fullSettlementNote: "Full {currency} settlement",
+    gregorianCalendar: "Gregorian",
     iGave: "I gave",
     iOweOverpaid: "I owe / overpaid",
     iReceived: "I received",
@@ -147,6 +155,10 @@ const translations = {
     people: "People",
     peopleHint: "Click a name to open that person, then add debt, record a partial repayment, or settle fully.",
     personMeta: "{records} - last {date}",
+    persianCalendar: "Persian",
+    persianDay: "Persian day",
+    persianMonth: "Persian month",
+    persianYear: "Persian year",
     quickAmount: "Quick amount",
     quickDebtNote: "Quick debt",
     quickNote: "Quick note",
@@ -172,17 +184,17 @@ const translations = {
     setRateFirst: "Set a rate first",
     settled: "Settled",
     storageFailed: "Storage failed",
-    storageFailedMessage: "The browser could not open local storage for this ledger.",
+    storageFailedMessage: "The local ledger database could not be reached.",
     switchToDark: "Switch to dark theme",
     switchToLight: "Switch to light theme",
     theyOweMe: "They owe me",
     theyOweYou: "They owe you",
     timeline: "Timeline",
-    tomanAmountWhole: "Toman amounts must be whole numbers",
+    tomanAmountWhole: "Toman amounts must be whole numbers. Remove decimals.",
     tomanOption: "Toman (T)",
     tomanShort: "Toman",
     tomanUnit: "T",
-    tomanWholeQuick: "Enter a whole Toman amount",
+    tomanWholeQuick: "Enter a whole Toman amount. Remove decimals.",
     tomanBalanceSettled: "Toman balance settled",
     unsupportedBackup: "Backup file must include a transactions array.",
     updateRecord: "Update record",
@@ -218,6 +230,7 @@ const translations = {
     couldNotSettleBalance: "تسویه انجام نشد",
     currency: "ارز",
     darkTheme: "تاریک",
+    datePicker: "تقویم",
     debtAdded: "بدهی اضافه شد",
     delete: "حذف",
     deleteAll: "حذف همه",
@@ -234,6 +247,7 @@ const translations = {
     exportedRecords: "{count} {label} خروجی گرفته شد",
     from: "از",
     fullSettlementNote: "تسویه کامل {currency}",
+    gregorianCalendar: "میلادی",
     iGave: "پول دادم",
     iOweOverpaid: "بدهی من / اضافه پرداخت",
     iReceived: "پول گرفتم",
@@ -272,6 +286,10 @@ const translations = {
     people: "اشخاص",
     peopleHint: "روی نام بزنید؛ سپس بدهی اضافه کنید، پرداخت جزئی ثبت کنید یا کامل تسویه کنید.",
     personMeta: "{records} - آخرین {date}",
+    persianCalendar: "شمسی",
+    persianDay: "روز شمسی",
+    persianMonth: "ماه شمسی",
+    persianYear: "سال شمسی",
     quickAmount: "مبلغ سریع",
     quickDebtNote: "بدهی سریع",
     quickNote: "یادداشت سریع",
@@ -297,17 +315,17 @@ const translations = {
     setRateFirst: "اول نرخ را وارد کنید",
     settled: "تسویه شده",
     storageFailed: "خطای ذخیره‌سازی",
-    storageFailedMessage: "مرورگر نتوانست ذخیره‌سازی محلی این دفتر را باز کند.",
+    storageFailedMessage: "پایگاه داده محلی این دفتر در دسترس نیست.",
     switchToDark: "تغییر به حالت تاریک",
     switchToLight: "تغییر به حالت روشن",
     theyOweMe: "بدهکارند",
     theyOweYou: "طلب شما",
     timeline: "تاریخچه",
-    tomanAmountWhole: "مبلغ تومان باید عدد صحیح باشد",
+    tomanAmountWhole: "مبلغ تومان باید عدد صحیح باشد. اعشار را حذف کنید.",
     tomanOption: "تومان (T)",
     tomanShort: "تومان",
     tomanUnit: "تومان",
-    tomanWholeQuick: "مبلغ تومان را به صورت عدد صحیح وارد کنید",
+    tomanWholeQuick: "مبلغ تومان را به صورت عدد صحیح وارد کنید. اعشار را حذف کنید.",
     tomanBalanceSettled: "مانده تومان تسویه شد",
     unsupportedBackup: "فایل پشتیبان باید آرایه transactions داشته باشد.",
     updateRecord: "به‌روزرسانی رکورد",
@@ -358,7 +376,7 @@ function applyTheme(theme, options = {}) {
   themeToggle.setAttribute("aria-label", t(currentTheme === "dark" ? "switchToLight" : "switchToDark"));
   themeToggleLabel.textContent = t(currentTheme === "dark" ? "lightTheme" : "darkTheme");
 
-  if (options.save !== false) localStorage.setItem(THEME_KEY, currentTheme);
+  if (options.save !== false) setSetting(THEME_KEY, currentTheme).catch((error) => showToast(getErrorMessage(error, "Could not save theme.")));
 }
 
 function applyLanguage(language, options = {}) {
@@ -368,9 +386,11 @@ function applyLanguage(language, options = {}) {
   languageSelect.value = currentLanguage;
   updateStaticText();
   updateSaveButtonLabel();
+  if (dateInput.value) setPersianPickerFromDate(dateInput.value);
+  else populatePersianPicker();
   applyTheme(currentTheme, { save: false });
 
-  if (options.save !== false) localStorage.setItem(LANGUAGE_KEY, currentLanguage);
+  if (options.save !== false) setSetting(LANGUAGE_KEY, currentLanguage).catch((error) => showToast(getErrorMessage(error, "Could not save language.")));
   if (options.render !== false) render();
 }
 
@@ -405,79 +425,61 @@ function getSignedAmount(transaction) {
   return transaction.direction === "theyOwe" ? transaction.amount : -transaction.amount;
 }
 
-function openDatabase() {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
+async function apiRequest(path, options = {}) {
+  const response = await fetch(`${API_BASE}${path}`, {
+    headers: { "Content-Type": "application/json", ...(options.headers || {}) },
+    ...options,
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error || "Request failed.");
+  return data;
+}
 
-    request.onupgradeneeded = () => {
-      const database = request.result;
-      if (!database.objectStoreNames.contains(STORE_NAME)) {
-        database.createObjectStore(STORE_NAME, { keyPath: "id" });
-      }
-      if (!database.objectStoreNames.contains(AUDIT_STORE_NAME)) {
-        database.createObjectStore(AUDIT_STORE_NAME, { keyPath: "id" });
-      }
-    };
+async function storeTransaction(mode, value, audit = {}) {
+  if (mode === "put") {
+    const isUpdate = audit.action === "record-updated";
+    const path = isUpdate ? `/transactions/${encodeURIComponent(value.id)}` : "/transactions";
+    const method = isUpdate ? "PUT" : "POST";
+    await apiRequest(path, { method, body: JSON.stringify({ transaction: value, audit }) });
+    return;
+  }
 
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
+  if (mode === "delete") {
+    await apiRequest(`/transactions/${encodeURIComponent(value)}`, { method: "DELETE", body: JSON.stringify({ audit }) });
+    return;
+  }
+
+  if (mode === "clear") {
+    await apiRequest("/transactions", { method: "DELETE", body: JSON.stringify({ audit }) });
+  }
+}
+
+async function storeTransactions(records, options = {}) {
+  if (!options.clearExisting) {
+    await Promise.all(records.map((record) => storeTransaction("put", record)));
+    return;
+  }
+
+  await apiRequest("/import", {
+    method: "POST",
+    body: JSON.stringify({ transactions: records, audit: options.audit }),
   });
 }
 
-function createAuditEntry(action, details = {}) {
-  return {
-    id: crypto.randomUUID(),
-    action,
-    details,
-    createdAt: Date.now(),
-  };
+async function getAllTransactions() {
+  const data = await apiRequest("/transactions");
+  return data.transactions || [];
 }
 
-function writeAuditEntry(store, action, details) {
-  if (!action) return;
-  store.put(createAuditEntry(action, details));
+async function getSetting(key) {
+  const data = await apiRequest(`/settings/${encodeURIComponent(key)}`);
+  return data.value || "";
 }
 
-function storeTransaction(mode, value, audit = {}) {
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction([STORE_NAME, AUDIT_STORE_NAME], "readwrite");
-    const store = tx.objectStore(STORE_NAME);
-    const auditStore = tx.objectStore(AUDIT_STORE_NAME);
-
-    if (mode === "put") store.put(value);
-    if (mode === "delete") store.delete(value);
-    if (mode === "clear") store.clear();
-    writeAuditEntry(auditStore, audit.action, audit.details);
-
-    tx.oncomplete = resolve;
-    tx.onerror = () => reject(tx.error);
-    tx.onabort = () => reject(tx.error);
-  });
-}
-
-function storeTransactions(records, options = {}) {
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction([STORE_NAME, AUDIT_STORE_NAME], "readwrite");
-    const store = tx.objectStore(STORE_NAME);
-    const auditStore = tx.objectStore(AUDIT_STORE_NAME);
-
-    if (options.clearExisting) store.clear();
-    records.forEach((record) => store.put(record));
-    writeAuditEntry(auditStore, options.audit?.action, options.audit?.details);
-
-    tx.oncomplete = resolve;
-    tx.onerror = () => reject(tx.error);
-    tx.onabort = () => reject(tx.error);
-  });
-}
-
-function getAllTransactions() {
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_NAME, "readonly");
-    const request = tx.objectStore(STORE_NAME).getAll();
-
-    request.onsuccess = () => resolve(request.result || []);
-    request.onerror = () => reject(request.error);
+async function setSetting(key, value) {
+  await apiRequest(`/settings/${encodeURIComponent(key)}`, {
+    method: "PUT",
+    body: JSON.stringify({ value }),
   });
 }
 
@@ -507,10 +509,11 @@ function renderFatalError(error) {
   panel.className = "panel";
 
   const title = document.createElement("h1");
-  title.textContent = t("storageFailed");
+  const serverRequired = error instanceof Error && error.message.startsWith("SERVER_REQUIRED:");
+  title.textContent = serverRequired ? "Open the launcher" : t("storageFailed");
 
   const message = document.createElement("p");
-  message.textContent = getErrorMessage(error, t("storageFailedMessage"));
+  message.textContent = serverRequired ? error.message.slice("SERVER_REQUIRED:".length).trim() : getErrorMessage(error, t("storageFailedMessage"));
 
   panel.append(title, message);
   main.append(panel);
@@ -530,6 +533,128 @@ function getStatusText(status) {
 
 function getTodayDate() {
   return new Date().toISOString().slice(0, 10);
+}
+
+function div(a, b) {
+  return Math.trunc(a / b);
+}
+
+function mod(a, b) {
+  return a - Math.trunc(a / b) * b;
+}
+
+function jalCal(jy) {
+  const breaks = [-61, 9, 38, 199, 426, 686, 756, 818, 1111, 1181, 1210, 1635, 2060, 2097, 2192, 2262, 2324, 2394, 2456, 3178];
+  const bl = breaks.length;
+  const gy = jy + 621;
+  let leapJ = -14;
+  let jp = breaks[0];
+  let jm = breaks[1];
+  let jump = jm - jp;
+
+  if (jy < jp || jy >= breaks[bl - 1]) return null;
+
+  for (let i = 1; i < bl; i += 1) {
+    jm = breaks[i];
+    jump = jm - jp;
+    if (jy < jm) break;
+    leapJ += div(jump, 33) * 8 + div(mod(jump, 33), 4);
+    jp = jm;
+  }
+
+  let n = jy - jp;
+  leapJ += div(n, 33) * 8 + div(mod(n, 33) + 3, 4);
+  if (mod(jump, 33) === 4 && jump - n === 4) leapJ += 1;
+
+  const leapG = div(gy, 4) - div((div(gy, 100) + 1) * 3, 4) - 150;
+  const march = 20 + leapJ - leapG;
+
+  if (jump - n < 6) n = n - jump + div(jump + 4, 33) * 33;
+  let leap = mod(mod(n + 1, 33) - 1, 4);
+  if (leap === -1) leap = 4;
+
+  return { leap, gy, march };
+}
+
+function g2d(gy, gm, gd) {
+  return (
+    div((gy + div(gm - 8, 6) + 100100) * 1461, 4) +
+    div(153 * mod(gm + 9, 12) + 2, 5) +
+    gd -
+    34840408 -
+    div(div(gy + 100100 + div(gm - 8, 6), 100) * 3, 4) +
+    752
+  );
+}
+
+function d2g(jdn) {
+  let j = 4 * jdn + 139361631;
+  j += div(div(4 * jdn + 183187720, 146097) * 3, 4) * 4 - 3908;
+  const i = div(mod(j, 1461), 4) * 5 + 308;
+  const gd = div(mod(i, 153), 5) + 1;
+  const gm = mod(div(i, 153), 12) + 1;
+  const gy = div(j, 1461) - 100100 + div(8 - gm, 6);
+  return { gy, gm, gd };
+}
+
+function j2d(jy, jm, jd) {
+  const r = jalCal(jy);
+  if (!r) return null;
+  return g2d(r.gy, 3, r.march) + (jm - 1) * 31 - div(jm, 7) * (jm - 7) + jd - 1;
+}
+
+function d2j(jdn) {
+  const gy = d2g(jdn).gy;
+  let jy = gy - 621;
+  const r = jalCal(jy);
+  const jdn1f = g2d(gy, 3, r.march);
+  let k = jdn - jdn1f;
+
+  if (k >= 0) {
+    if (k <= 185) return { jy, jm: 1 + div(k, 31), jd: mod(k, 31) + 1 };
+    k -= 186;
+  } else {
+    jy -= 1;
+    k += 179;
+    if (r.leap === 1) k += 1;
+  }
+
+  return { jy, jm: 7 + div(k, 30), jd: mod(k, 30) + 1 };
+}
+
+function toGregorian(jy, jm, jd) {
+  const jdn = j2d(jy, jm, jd);
+  return jdn ? d2g(jdn) : null;
+}
+
+function toPersian(gy, gm, gd) {
+  return d2j(g2d(gy, gm, gd));
+}
+
+function isLeapPersianYear(jy) {
+  const r = jalCal(jy);
+  return !!r && r.leap === 0;
+}
+
+function getPersianMonthLength(jy, jm) {
+  if (jm <= 6) return 31;
+  if (jm <= 11) return 30;
+  return isLeapPersianYear(jy) ? 30 : 29;
+}
+
+function parseIsoDate(value) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value || "");
+  if (!match) return null;
+  return { gy: Number(match[1]), gm: Number(match[2]), gd: Number(match[3]) };
+}
+
+function formatIsoDate(gy, gm, gd) {
+  return `${gy}-${String(gm).padStart(2, "0")}-${String(gd).padStart(2, "0")}`;
+}
+
+function formatPersianDate(jy, jm, jd) {
+  const numberFormat = new Intl.NumberFormat(getLocale(), { useGrouping: false });
+  return `${numberFormat.format(jd)} ${persianMonthNames[currentLanguage][jm - 1]} ${numberFormat.format(jy)}`;
 }
 
 function renderRateTools() {
@@ -632,16 +757,12 @@ function normalizeImportedRate(backup) {
 }
 
 function saveRate(value) {
-  if (value) {
-    localStorage.setItem(RATE_KEY, value);
-    return;
-  }
-
-  localStorage.removeItem(RATE_KEY);
+  setSetting(RATE_KEY, value || "").catch((error) => showToast(getErrorMessage(error, "Could not save rate.")));
 }
 
 function updateAmountInputForCurrency() {
   const isToman = transactionCurrencyInput.value === "TOMAN";
+  amountInput.min = isToman ? "1" : "0.01";
   amountInput.step = isToman ? "1" : "0.01";
   amountInput.inputMode = isToman ? "numeric" : "decimal";
   amountInput.placeholder = isToman ? "1000000" : "250";
@@ -649,9 +770,118 @@ function updateAmountInputForCurrency() {
 
 function updateQuickInputForCurrency() {
   const isToman = quickCurrencyInput.value === "TOMAN";
+  quickAmountInput.min = isToman ? "1" : "0.01";
   quickAmountInput.step = isToman ? "1" : "0.01";
   quickAmountInput.inputMode = isToman ? "numeric" : "decimal";
   quickAmountInput.placeholder = isToman ? "1000000" : t("amountPlaceholder");
+}
+
+function createSelectOption(value, label) {
+  const option = document.createElement("option");
+  option.value = value;
+  option.textContent = label;
+  return option;
+}
+
+function populatePersianYearOptions(selectedYear = "") {
+  const parsedToday = parseIsoDate(getTodayDate());
+  const currentPersianYear = toPersian(parsedToday.gy, parsedToday.gm, parsedToday.gd).jy;
+  const years = new Set();
+  for (let year = currentPersianYear - 20; year <= currentPersianYear + 10; year += 1) years.add(year);
+  if (selectedYear) years.add(Number(selectedYear));
+
+  persianYearInput.replaceChildren(createSelectOption("", "-"));
+  [...years].sort((a, b) => b - a).forEach((year) => {
+    persianYearInput.append(createSelectOption(String(year), new Intl.NumberFormat(getLocale(), { useGrouping: false }).format(year)));
+  });
+  persianYearInput.value = selectedYear ? String(selectedYear) : "";
+}
+
+function populatePersianMonthOptions(selectedMonth = "") {
+  persianMonthInput.replaceChildren(createSelectOption("", "-"));
+  persianMonthNames[currentLanguage].forEach((month, index) => {
+    persianMonthInput.append(createSelectOption(String(index + 1), month));
+  });
+  persianMonthInput.value = selectedMonth ? String(selectedMonth) : "";
+}
+
+function populatePersianDayOptions(selectedDay = "") {
+  const year = Number(persianYearInput.value);
+  const month = Number(persianMonthInput.value);
+  const maxDay = year && month ? getPersianMonthLength(year, month) : 31;
+  const numberFormat = new Intl.NumberFormat(getLocale(), { useGrouping: false });
+
+  persianDayInput.replaceChildren(createSelectOption("", "-"));
+  for (let day = 1; day <= maxDay; day += 1) {
+    persianDayInput.append(createSelectOption(String(day), numberFormat.format(day)));
+  }
+  persianDayInput.value = selectedDay && Number(selectedDay) <= maxDay ? String(selectedDay) : "";
+}
+
+function populatePersianPicker(values = {}) {
+  populatePersianYearOptions(values.jy ? String(values.jy) : persianYearInput.value);
+  populatePersianMonthOptions(values.jm ? String(values.jm) : persianMonthInput.value);
+  populatePersianDayOptions(values.jd ? String(values.jd) : persianDayInput.value);
+}
+
+function clearPersianPicker() {
+  populatePersianYearOptions("");
+  populatePersianMonthOptions("");
+  populatePersianDayOptions("");
+}
+
+function setPersianPickerFromDate(isoDate) {
+  const parsed = parseIsoDate(isoDate);
+  if (!parsed) {
+    clearPersianPicker();
+    return;
+  }
+
+  const persianDate = toPersian(parsed.gy, parsed.gm, parsed.gd);
+  populatePersianPicker(persianDate);
+  iranianDateInput.value = formatPersianDate(persianDate.jy, persianDate.jm, persianDate.jd);
+}
+
+function syncGregorianToPersianDate() {
+  if (!dateInput.value) {
+    clearPersianPicker();
+    if (dateModeInput.value === "gregorian") iranianDateInput.value = "";
+    return;
+  }
+
+  setPersianPickerFromDate(dateInput.value);
+}
+
+function syncPersianToGregorianDate() {
+  const jy = Number(persianYearInput.value);
+  const jm = Number(persianMonthInput.value);
+  populatePersianDayOptions(persianDayInput.value);
+  const jd = Number(persianDayInput.value);
+
+  if (!jy || !jm || !jd) {
+    dateInput.value = "";
+    iranianDateInput.value = "";
+    return;
+  }
+
+  const gregorianDate = toGregorian(jy, jm, jd);
+  if (!gregorianDate) return;
+  dateInput.value = formatIsoDate(gregorianDate.gy, gregorianDate.gm, gregorianDate.gd);
+  iranianDateInput.value = formatPersianDate(jy, jm, jd);
+}
+
+function updateDateMode() {
+  const isPersian = dateModeInput.value === "persian";
+  gregorianDatePanel.hidden = isPersian;
+  persianPicker.hidden = !isPersian;
+
+  if (isPersian) {
+    if (dateInput.value) setPersianPickerFromDate(dateInput.value);
+    else clearPersianPicker();
+    return;
+  }
+
+  syncGregorianToPersianDate();
 }
 
 function buildBackup() {
@@ -707,7 +937,6 @@ async function importBackupFile(file) {
     rateInput.value = importedRate;
     saveRate(importedRate);
   }
-  localStorage.setItem(SEED_KEY, "imported");
   selectedPersonName = "";
   searchInput.value = "";
   resetForm();
@@ -984,6 +1213,9 @@ function resetForm() {
   if (selectedPersonName) nameInput.value = selectedPersonName;
   dateInput.value = "";
   iranianDateInput.value = "";
+  dateModeInput.value = "gregorian";
+  clearPersianPicker();
+  updateDateMode();
   updateAmountInputForCurrency();
   updateSaveButtonLabel();
 }
@@ -1078,6 +1310,8 @@ form.addEventListener("submit", async (event) => {
   const amount = Number(amountInput.value);
   const direction = new FormData(form).get("direction");
   const currency = normalizeCurrency(transactionCurrencyInput.value);
+  if (dateModeInput.value === "persian") syncPersianToGregorianDate();
+  else syncGregorianToPersianDate();
 
   if (!name) {
     showToast(t("enterName"));
@@ -1161,6 +1395,8 @@ recordsTable.addEventListener("click", async (event) => {
   updateAmountInputForCurrency();
   dateInput.value = record.date || "";
   iranianDateInput.value = record.iranianDate || "";
+  dateModeInput.value = record.date ? "gregorian" : "persian";
+  updateDateMode();
   noteInput.value = record.note || "";
   form.elements.direction.value = record.direction;
   saveButton.textContent = t("updateRecord");
@@ -1211,6 +1447,11 @@ languageSelect.addEventListener("change", () => applyLanguage(languageSelect.val
 themeToggle.addEventListener("click", () => applyTheme(currentTheme === "dark" ? "light" : "dark"));
 transactionCurrencyInput.addEventListener("change", updateAmountInputForCurrency);
 quickCurrencyInput.addEventListener("change", updateQuickInputForCurrency);
+dateModeInput.addEventListener("change", updateDateMode);
+dateInput.addEventListener("change", syncGregorianToPersianDate);
+persianYearInput.addEventListener("change", syncPersianToGregorianDate);
+persianMonthInput.addEventListener("change", syncPersianToGregorianDate);
+persianDayInput.addEventListener("change", syncPersianToGregorianDate);
 nameInput.addEventListener("change", () => {
   const name = normalizeName(nameInput.value);
   if (getPersonNames().includes(name)) selectPerson(name, { filter: false, scroll: false });
@@ -1253,21 +1494,20 @@ importFileInput.addEventListener("change", async () => {
 });
 
 async function init() {
-  const savedTheme = localStorage.getItem(THEME_KEY);
+  if (window.location.protocol === "file:") {
+    throw new Error("SERVER_REQUIRED: Double-click `Open Money Ledger.command` in the project root, or run `npm run launch`, then visit http://localhost:8080/.");
+  }
+
+  const savedTheme = await getSetting(THEME_KEY);
+  const savedLanguage = await getSetting(LANGUAGE_KEY);
   const preferredTheme = window.matchMedia?.("(prefers-color-scheme: dark)").matches ? "dark" : "light";
   applyTheme(savedTheme || preferredTheme, { save: false });
-  applyLanguage(localStorage.getItem(LANGUAGE_KEY) || "en", { save: false, render: false });
-  rateInput.value = localStorage.getItem(RATE_KEY) || "";
+  applyLanguage(savedLanguage || "en", { save: false, render: false });
+  rateInput.value = await getSetting(RATE_KEY);
   updateAmountInputForCurrency();
   updateQuickInputForCurrency();
-  db = await openDatabase();
-  await importSeedTransactions();
+  updateDateMode();
   await refresh();
-}
-
-async function importSeedTransactions() {
-  // Legacy flag only: personal seed records are intentionally no longer stored in source code.
-  if (!localStorage.getItem(SEED_KEY)) localStorage.setItem(SEED_KEY, "disabled");
 }
 
 init().catch(renderFatalError);
